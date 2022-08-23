@@ -1,0 +1,47 @@
+python -m pip install pymongoarrow
+
+python -m pip install pymongo[srv]
+
+import pymongo
+import pymongoarrow 
+from pymongo import MongoClient
+
+client = MongoClient('Enter your Atlas cluster connection string here')
+
+db = client.test_database
+col = db.test_collection
+
+from datetime import datetime
+col.insert_many([
+
+{'_id': 1, 'measure': 43, 'status':'active', 'installed_on': datetime(2022, 1, 8, 3, 43, 12)},
+
+{'_id': 2, 'measure': 32, 'status':'active', 'installed_on': datetime(2022, 2, 2, 11, 43, 27)},
+
+{'_id': 3, 'measure': 62, 'status':'inactive', 'installed_on': datetime(2022, 3, 12, 3, 53, 12)},
+
+{'_id': 4, 'measure': 59, 'status':'active', 'installed_on': datetime(2022, 4, 8, 3, 22, 45)}
+
+])
+
+from pymongoarrow.monkey import patch_all 
+patch_all() 
+
+import pandas as pd
+df = col.find_pandas_all({'measure': {'$gt': 40}})
+
+# Now, we have successfully exported data out of MongoDB into a pandas dataframe. Let’s verify that by printing it.
+print(df)
+
+from pymongoarrow.api import Schema
+
+# let's define the scema
+schema = Schema({'_id': int, 'measure': float, 'status': str, 'installed_on': datetime})
+
+import numpy as np
+npa = col.find_numpy_all({'measure': {'$gt': 40}},schema=schema)
+ 
+
+# Now, we have successfully exported data out of MongoDB into a numpy ndarray. Let’s verify that by printing it:
+print(npa)
+
